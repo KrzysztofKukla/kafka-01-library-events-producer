@@ -33,13 +33,13 @@ public class LibraryEventProducerServiceImpl implements LibraryEventProducerServ
 
         //sendDefault allows to automatically reads topic defined in application.yml
         //ListenableFuture allows to send message to Kafka when batch will be full ( it will happen in future )
-        //asynchronous call
         ListenableFuture<SendResult<Long, String>> listenableFuture = kafkaTemplate.sendDefault(key, message);
 
         //callback added
         listenableFuture.addCallback(listenableFutureCallback(key, message));
     }
 
+    //this is called asynchronous ( in other Thread ) that means can be finished after than last code line
     private ListenableFutureCallback<SendResult<Long, String>> listenableFutureCallback(Long key, String message) {
         return new ListenableFutureCallback<SendResult<Long, String>>() {
 
@@ -59,7 +59,6 @@ public class LibraryEventProducerServiceImpl implements LibraryEventProducerServ
 
     //result gives us bunch of information like partition, offsets etc.
     private void handleSuccess(Long key, String message, SendResult<Long, String> result) {
-
         log.info("Message sent successfully for key: {}, value is: {}, partition is: {}", key, message, result.getRecordMetadata().partition());
     }
 

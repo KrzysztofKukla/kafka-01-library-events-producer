@@ -2,6 +2,7 @@ package pl.kukla.krzys.kafka01libraryeventsproducer.web.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +19,7 @@ import pl.kukla.krzys.kafka01libraryeventsproducer.producer.LibraryEventProducer
 @RestController
 @RequestMapping(LibraryEventController.V1_LIBRARY_EVENT_URL)
 @RequiredArgsConstructor
+@Slf4j
 public class LibraryEventController {
 
     static final String V1_LIBRARY_EVENT_URL = "/v1/libraryevent";
@@ -28,7 +30,10 @@ public class LibraryEventController {
     @PostMapping
     public ResponseEntity<LibraryEvent> postLibraryEvent(@RequestBody LibraryEvent libraryEvent) throws JsonProcessingException {
 
+        log.info("before sendLibraryEvent");
+        //asynchronous call
         libraryEventProducerService.sendLibraryEvent(libraryEvent);
+        log.info("after sendLibraryEvent");
 
         return ResponseEntity.status(HttpStatus.CREATED).body(libraryEvent);
     }
