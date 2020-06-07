@@ -11,6 +11,9 @@ import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.ListenableFutureCallback;
 import pl.kukla.krzys.kafka01libraryeventsproducer.domain.LibraryEvent;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+
 /**
  * @author Krzysztof Kukla
  */
@@ -24,6 +27,7 @@ public class LibraryEventProducerServiceImpl implements LibraryEventProducerServ
     private final KafkaTemplate<Long, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
+    //it allows asynchronous call
     @Override
     public void sendLibraryEvent(LibraryEvent libraryEvent) throws JsonProcessingException {
         log.info("Sending message to Kafka");
@@ -37,6 +41,28 @@ public class LibraryEventProducerServiceImpl implements LibraryEventProducerServ
 
         //callback added
         listenableFuture.addCallback(listenableFutureCallback(key, message));
+    }
+
+    //synchronous call
+    @Override
+    public SendResult<Long, String> sendLibraryEventSynchronous(LibraryEvent libraryEvent) throws JsonProcessingException, ExecutionException,
+        InterruptedException {
+        log.info("Sending message to Kafka");
+        Long key = libraryEvent.getId();
+
+        String message = objectMapper.writeValueAsString(libraryEvent);
+
+        //get() method wait until the message is sent successfully or onFailure
+        SendResult<Long, String> sendResult = null;
+        try {
+            sendResult = kafkaTemplate.sendDefault(key, message).get(1, TimeUnit.SECONDS); //wait max 1 sec then throw TimeoutException
+        } catch (InterruptedException | ExecutionException ex) {
+            log.error("Error ExecutionException during sending message: {}", ex.getMessage());
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Error ExecutionException during sending message: {}", ex.getMessage());
+        }
+        return sendResult;
     }
 
     //this is called asynchronous ( in other Thread ) that means can be finished after than last code line
