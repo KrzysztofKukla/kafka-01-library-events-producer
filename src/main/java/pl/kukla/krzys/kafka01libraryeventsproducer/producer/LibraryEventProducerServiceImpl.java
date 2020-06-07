@@ -1,4 +1,4 @@
-package pl.kukla.krzys.kafka01libraryeventsproducer.service;
+package pl.kukla.krzys.kafka01libraryeventsproducer.producer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,22 +17,30 @@ import pl.kukla.krzys.kafka01libraryeventsproducer.domain.LibraryEvent;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class LibraryEventProducerServiceImpl {
+public class LibraryEventProducerServiceImpl implements LibraryEventProducerService {
 
+    //key is Long from key-serializer: org.apache.kafka.common.serialization.LongSerializer
+    //value is String as message from value-serializer: org.apache.kafka.common.serialization.StringSerializer
     private final KafkaTemplate<Long, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
+    @Override
     public void sendLibraryEvent(LibraryEvent libraryEvent) throws JsonProcessingException {
+        log.info("Sending message to Kafka");
         Long key = libraryEvent.getId();
 
         String message = objectMapper.writeValueAsString(libraryEvent);
 
         //sendDefault allows to automatically reads topic defined in application.yml
-        //ListenableFuture ( it will happen in future ) allows to send message to Kafka when batch will be full
+        //ListenableFuture allows to send message to Kafka when batch will be full ( it will happen in future )
+        //asynchronous call
         ListenableFuture<SendResult<Long, String>> listenableFuture = kafkaTemplate.sendDefault(key, message);
+
+        //callback added
+        listenableFuture.addCallback(listenableFutureCallback(key, message));
     }
 
-    private ListenableFutureCallback<SendResult<Long, String>> ListenableFutureCallback(Long key, String message,) {
+    private ListenableFutureCallback<SendResult<Long, String>> listenableFutureCallback(Long key, String message) {
         return new ListenableFutureCallback<SendResult<Long, String>>() {
 
             //called if publish message is failed
@@ -56,11 +64,11 @@ public class LibraryEventProducerServiceImpl {
     }
 
     private void handleFailure(Long key, String message, Throwable ex) {
-        log.error("Error exception message: {}",ex.getMessage());
+        log.error("Error exception message: {}", ex.getMessage());
         try {
             throw ex;
         } catch (Throwable e) {
-            log.error("Error in onFailure: {}",ex.getMessage());
+            log.error("Error in onFailure: {}", ex.getMessage());
         }
     }
 
