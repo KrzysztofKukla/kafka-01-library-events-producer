@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,25 @@ public class LibraryEventProducerServiceImpl implements LibraryEventProducerServ
 
         //callback added
         listenableFuture.addCallback(listenableFutureCallback(key, message));
+    }
+
+    //it allows asynchronous call
+    @Override
+    public void sendLibraryEventWithTopic(LibraryEvent libraryEvent, String topic) throws JsonProcessingException {
+        log.info("Sending message to Kafka");
+        Long key = libraryEvent.getId();
+
+        String message = objectMapper.writeValueAsString(libraryEvent);
+
+        ProducerRecord<Long, String> producerRecord = buildProducerRecord(topic, key, message);
+        ListenableFuture<SendResult<Long, String>> listenableFuture = kafkaTemplate.send(producerRecord);
+
+        //callback added
+        listenableFuture.addCallback(listenableFutureCallback(key, message));
+    }
+
+    private ProducerRecord<Long, String> buildProducerRecord(String topic, Long key, String message) {
+        return new ProducerRecord<Long, String>(topic, null, key, message, null);
     }
 
     //synchronous call

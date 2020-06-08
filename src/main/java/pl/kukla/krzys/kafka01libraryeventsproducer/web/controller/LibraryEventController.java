@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.kafka.support.SendResult;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,15 +35,24 @@ public class LibraryEventController {
 
         log.info("before sendLibraryEvent");
         //asynchronous call
-//        libraryEventProducerService.sendLibraryEvent(libraryEvent);
+        libraryEventProducerService.sendLibraryEvent(libraryEvent);
 
         //synchronous call
-        SendResult<Long, String> sendResult = libraryEventProducerService.sendLibraryEventSynchronous(libraryEvent);
-        log.info("SendResult: {}", sendResult.toString());
+//        SendResult<Long, String> sendResult = libraryEventProducerService.sendLibraryEventSynchronous(libraryEvent);
+//        log.info("SendResult: {}", sendResult.toString());
 
         log.info("after sendLibraryEvent");
 
         return ResponseEntity.status(HttpStatus.CREATED).body(libraryEvent);
+    }
+
+    @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping("/{topic}")
+    public LibraryEvent sendLibraryEventToTopic(@RequestBody LibraryEvent libraryEvent, @PathVariable String topic) throws JsonProcessingException {
+        log.info("Sending libraryEvetn to {} topic", topic);
+        libraryEventProducerService.sendLibraryEventWithTopic(libraryEvent, topic);
+
+        return libraryEvent;
     }
 
 }

@@ -13,6 +13,9 @@ public interface LibraryEventProducerService {
 
     void sendLibraryEvent(LibraryEvent libraryEvent) throws JsonProcessingException;
 
+    //it allows asynchronous call
+    void sendLibraryEventWithTopic(LibraryEvent libraryEvent, String topic) throws JsonProcessingException;
+
     //synchronous call
     SendResult<Long, String> sendLibraryEventSynchronous(LibraryEvent libraryEvent) throws JsonProcessingException, ExecutionException, InterruptedException;
 
