@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import pl.kukla.krzys.kafka01libraryeventsproducer.domain.LibraryEvent;
+import pl.kukla.krzys.kafka01libraryeventsproducer.domain.LibraryEventType;
 import pl.kukla.krzys.kafka01libraryeventsproducer.producer.LibraryEventProducerService;
 
 import java.util.concurrent.ExecutionException;
@@ -33,6 +34,7 @@ public class LibraryEventController {
     @PostMapping
     public ResponseEntity<LibraryEvent> postLibraryEvent(@RequestBody LibraryEvent libraryEvent) throws JsonProcessingException, ExecutionException, InterruptedException {
 
+        libraryEvent.setLibraryEventType(LibraryEventType.NEW);
         log.info("before sendLibraryEvent");
         //asynchronous call
         libraryEventProducerService.sendLibraryEvent(libraryEvent);
