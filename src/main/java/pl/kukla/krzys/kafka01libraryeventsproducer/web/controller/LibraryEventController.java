@@ -51,7 +51,7 @@ public class LibraryEventController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/{topic}")
     public LibraryEvent sendLibraryEventToTopic(@RequestBody LibraryEvent libraryEvent, @PathVariable String topic) throws JsonProcessingException {
-        log.info("Sending libraryEvetn to {} topic", topic);
+        log.info("Sending libraryEvent to {} topic", topic);
         libraryEventProducerService.sendLibraryEventWithTopic(libraryEvent, topic);
 
         return libraryEvent;
