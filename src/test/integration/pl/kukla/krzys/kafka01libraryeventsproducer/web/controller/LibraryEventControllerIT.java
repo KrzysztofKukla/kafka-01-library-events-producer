@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import pl.kukla.krzys.kafka01libraryeventsproducer.domain.Book;
 import pl.kukla.krzys.kafka01libraryeventsproducer.domain.LibraryEvent;
 import pl.kukla.krzys.kafka01libraryeventsproducer.domain.LibraryEventType;
@@ -21,15 +22,11 @@ import java.util.Map;
  * @author Krzysztof Kukla
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@EmbeddedKafka(topics = {"library-event"}, partitions = 3)
 public class LibraryEventControllerIT {
 
     @Autowired
     private TestRestTemplate testRestTemplate;
-
-//    @Autowired
-//    private LibraryEventProducerService libraryEventProducerService;
-//    @Autowired
-//    private MockMvc mockMvc;
 
     @Test
     void postLibraryEventWithTopicTest() throws Exception {
