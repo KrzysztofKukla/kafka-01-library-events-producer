@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 /**
  * @author Krzysztof Kukla
  */
@@ -15,6 +18,8 @@ import lombok.NoArgsConstructor;
 public class LibraryEvent {
     private Long id;
     private LibraryEventType libraryEventType;
+    @NotNull
+    @Valid
     private Book book;
 
 }

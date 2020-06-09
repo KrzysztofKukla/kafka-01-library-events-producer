@@ -15,6 +15,7 @@ import pl.kukla.krzys.kafka01libraryeventsproducer.domain.LibraryEvent;
 import pl.kukla.krzys.kafka01libraryeventsproducer.domain.LibraryEventType;
 import pl.kukla.krzys.kafka01libraryeventsproducer.producer.LibraryEventProducerService;
 
+import javax.validation.Valid;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -32,7 +33,8 @@ public class LibraryEventController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public ResponseEntity<LibraryEvent> postLibraryEvent(@RequestBody LibraryEvent libraryEvent) throws JsonProcessingException, ExecutionException, InterruptedException {
+    public ResponseEntity<LibraryEvent> postLibraryEvent(@RequestBody @Valid LibraryEvent libraryEvent) throws JsonProcessingException,
+        ExecutionException, InterruptedException {
 
         libraryEvent.setLibraryEventType(LibraryEventType.NEW);
         log.info("before sendLibraryEvent");
