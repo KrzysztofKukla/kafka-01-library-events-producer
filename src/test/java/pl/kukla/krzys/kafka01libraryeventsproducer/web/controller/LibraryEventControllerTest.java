@@ -46,6 +46,20 @@ class LibraryEventControllerTest {
     }
 
     @Test
+    void postLibraryEventInvalidBook() throws Exception {
+        LibraryEvent libraryEvent = createLibraryEvent(null);
+        BDDMockito.doNothing().when(libraryEventProducerService).sendLibraryEvent(isA(LibraryEvent.class));
+
+        String expectedErrorMessage = "book - must not be null";
+        mockMvc.perform(MockMvcRequestBuilders.post(LibraryEventController.V1_LIBRARY_EVENT_URL)
+            .content(objectMapper.writeValueAsString(libraryEvent))
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().isBadRequest())
+            .andExpect(MockMvcResultMatchers.content().string(expectedErrorMessage));
+
+    }
+
+    @Test
     void sendLibraryEventToTopic() {
     }
 
