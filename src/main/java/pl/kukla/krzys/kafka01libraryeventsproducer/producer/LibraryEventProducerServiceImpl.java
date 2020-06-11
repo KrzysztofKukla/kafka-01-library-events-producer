@@ -33,7 +33,7 @@ public class LibraryEventProducerServiceImpl implements LibraryEventProducerServ
 
     //it allows asynchronous call
     @Override
-    public void sendLibraryEvent(LibraryEvent libraryEvent) throws JsonProcessingException {
+    public ListenableFuture<SendResult<Long, String>> sendLibraryEvent(LibraryEvent libraryEvent) throws JsonProcessingException {
         log.info("Sending message to Kafka");
         Long key = libraryEvent.getId();
 
@@ -45,11 +45,12 @@ public class LibraryEventProducerServiceImpl implements LibraryEventProducerServ
 
         //callback added
         listenableFuture.addCallback(listenableFutureCallback(key, message));
+        return listenableFuture;
     }
 
     //it allows asynchronous call
     @Override
-    public void sendLibraryEventWithTopic(LibraryEvent libraryEvent, String topic) throws JsonProcessingException {
+    public ListenableFuture<SendResult<Long, String>> sendLibraryEventWithTopic(LibraryEvent libraryEvent, String topic) throws JsonProcessingException {
         log.info("Sending message to Kafka");
         Long key = libraryEvent.getId();
 
@@ -60,6 +61,8 @@ public class LibraryEventProducerServiceImpl implements LibraryEventProducerServ
 
         //callback added
         listenableFuture.addCallback(listenableFutureCallback(key, message));
+
+        return listenableFuture;
     }
 
     private ProducerRecord<Long, String> buildProducerRecord(String topic, Long key, String message) {
@@ -115,11 +118,11 @@ public class LibraryEventProducerServiceImpl implements LibraryEventProducerServ
     }
 
     private void handleFailure(Long key, String message, Throwable ex) {
-        log.error("Error exception message: {}", ex.getMessage());
+        log.error("Error exception message during sending: {}", ex.getMessage());
         try {
             throw ex;
         } catch (Throwable e) {
-            log.error("Error in onFailure: {}", ex.getMessage());
+            log.error("Error in onFailure method: {}", ex.getMessage());
         }
     }
 

@@ -2,6 +2,7 @@ package pl.kukla.krzys.kafka01libraryeventsproducer.web.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -15,8 +16,6 @@ import pl.kukla.krzys.kafka01libraryeventsproducer.domain.Book;
 import pl.kukla.krzys.kafka01libraryeventsproducer.domain.LibraryEvent;
 import pl.kukla.krzys.kafka01libraryeventsproducer.domain.LibraryEventType;
 import pl.kukla.krzys.kafka01libraryeventsproducer.producer.LibraryEventProducerService;
-
-import static org.mockito.ArgumentMatchers.isA;
 
 /**
  * @author Krzysztof Kukla
@@ -36,7 +35,7 @@ class LibraryEventControllerTest {
     @Test
     void postLibraryEvent() throws Exception {
         LibraryEvent libraryEvent = createLibraryEvent(createBook());
-        BDDMockito.doNothing().when(libraryEventProducerService).sendLibraryEvent(isA(LibraryEvent.class));
+        BDDMockito.when(libraryEventProducerService.sendLibraryEvent(ArgumentMatchers.any(LibraryEvent.class))).thenReturn(null);
 
         mockMvc.perform(MockMvcRequestBuilders.post(LibraryEventController.V1_LIBRARY_EVENT_URL)
             .content(objectMapper.writeValueAsString(libraryEvent))
@@ -48,7 +47,7 @@ class LibraryEventControllerTest {
     @Test
     void postLibraryEventInvalidBook() throws Exception {
         LibraryEvent libraryEvent = createLibraryEvent(null);
-        BDDMockito.doNothing().when(libraryEventProducerService).sendLibraryEvent(isA(LibraryEvent.class));
+        BDDMockito.when(libraryEventProducerService.sendLibraryEvent(ArgumentMatchers.any(LibraryEvent.class))).thenReturn(null);
 
         String expectedErrorMessage = "book - must not be null";
         mockMvc.perform(MockMvcRequestBuilders.post(LibraryEventController.V1_LIBRARY_EVENT_URL)
