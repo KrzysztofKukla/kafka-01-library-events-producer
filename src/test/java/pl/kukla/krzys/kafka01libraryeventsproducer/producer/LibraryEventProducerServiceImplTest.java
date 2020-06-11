@@ -1,7 +1,10 @@
 package pl.kukla.krzys.kafka01libraryeventsproducer.producer;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
 import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.SettableListenableFuture;
 import pl.kukla.krzys.kafka01libraryeventsproducer.domain.Book;
@@ -45,6 +49,34 @@ class LibraryEventProducerServiceImplTest {
         BDDMockito.when(kafkaTemplate.send(ArgumentMatchers.any(ProducerRecord.class))).thenReturn(listenableFuture);
 
         Assertions.assertThrows(Exception.class, () -> libraryEventProducerService.sendLibraryEventWithTopic(libraryEvent, topic).get());
+    }
+
+    @Test
+    void sendLibraryEventWithTopicSuccess() throws Exception {
+        LibraryEvent libraryEvent = createLibraryEvent(createBook());
+        String topic = "some_topic";
+        SettableListenableFuture<SendResult<Long, String>> settableListenableFuture = createSettableListenableFuture(libraryEvent, topic);
+
+        //here we try to simulate onSuccess method
+        BDDMockito.when(kafkaTemplate.send(ArgumentMatchers.any(ProducerRecord.class))).thenReturn(settableListenableFuture);
+
+        ListenableFuture<SendResult<Long, String>> listenableFuture = libraryEventProducerService.sendLibraryEventWithTopic(libraryEvent, topic);
+        SendResult<Long, String> sendResult = listenableFuture.get();
+
+        Assertions.assertEquals(1, sendResult.getRecordMetadata().partition());
+    }
+
+    private SettableListenableFuture<SendResult<Long, String>> createSettableListenableFuture(LibraryEvent libraryEvent, String topic) throws JsonProcessingException {
+        String jsonMessage = objectMapper.writeValueAsString(libraryEvent);
+        SettableListenableFuture<SendResult<Long, String>> listenableFuture = new SettableListenableFuture<>();
+        ProducerRecord<Long, String> producerRecord = new ProducerRecord<Long, String>(topic, libraryEvent.getId(), jsonMessage);
+        RecordMetadata recordMetadata = new RecordMetadata(new TopicPartition(topic, 1),
+            1, 1, 342, System.currentTimeMillis(), 1, 2);
+        SendResult<Long, String> sendResult = new SendResult<>(producerRecord, recordMetadata);
+
+        listenableFuture.set(sendResult);
+
+        return listenableFuture;
     }
 
     private LibraryEvent createLibraryEvent(Book book) {
