@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +33,7 @@ import java.util.Map;
  * @author Krzysztof Kukla
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@EmbeddedKafka(topics = {"library-event"}, partitions = 3)
+@EmbeddedKafka(topics = {"library-events"}, partitions = 3)
 public class LibraryEventControllerIT {
 
     @Autowired
@@ -58,15 +59,14 @@ public class LibraryEventControllerIT {
     void tearDown() {
         //very good practice
         consumer.close();
-        ;
     }
 
     @Test
     void postLibraryEventWithTopicTest() throws Exception {
-        String libraryEventsTopic = "library-event";
+        String libraryEventsTopic = "library-events";
         //given
         HttpHeaders headers = createHeaders();
-        LibraryEvent libraryEvent = createLibraryEvent(createBook());
+        LibraryEvent libraryEvent = createLibraryEvent(createBook(), LibraryEventType.NEW);
         HttpEntity<LibraryEvent> libraryEventRequest = new HttpEntity<>(libraryEvent, headers);
 
         //when
@@ -85,16 +85,42 @@ public class LibraryEventControllerIT {
         Assertions.assertEquals(libraryEvent, libraryEventFromJson);
     }
 
+    @Test
+    void updateLibraryEventTest() throws Exception {
+        String libraryEventsTopic = "library-events";
+        //given
+        HttpHeaders headers = createHeaders();
+        LibraryEvent libraryEvent = createLibraryEvent(createBook(), LibraryEventType.UPDATE);
+        libraryEvent.setId(1L);
+        HttpEntity<LibraryEvent> libraryEventRequest = new HttpEntity<>(libraryEvent, headers);
+
+        //when
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("topic", libraryEventsTopic);
+        variables.put("id", 1);
+        ResponseEntity<?> responseEntity =
+            testRestTemplate.exchange(LibraryEventController.V1_LIBRARY_EVENT_URL + "/{topic}/{id}", HttpMethod.PUT, libraryEventRequest,
+                ResponseEntity.class, variables);
+
+        //then
+        Assertions.assertEquals(HttpStatus.NO_CONTENT, responseEntity.getStatusCode());
+
+        ConsumerRecord<Long, String> consumerRecord = KafkaTestUtils.getSingleRecord(consumer, libraryEventsTopic);
+        String message = consumerRecord.value();
+        LibraryEvent libraryEventFromJson = objectMapper.readValue(message, LibraryEvent.class);
+        Assertions.assertEquals(libraryEvent, libraryEventFromJson);
+    }
+
     private HttpHeaders createHeaders() {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         return httpHeaders;
     }
 
-    private LibraryEvent createLibraryEvent(Book book) {
+    private LibraryEvent createLibraryEvent(Book book, LibraryEventType type) {
         return LibraryEvent.builder()
             .id(null)
-            .libraryEventType(LibraryEventType.NEW)
+            .libraryEventType(type)
             .book(book)
             .build();
 

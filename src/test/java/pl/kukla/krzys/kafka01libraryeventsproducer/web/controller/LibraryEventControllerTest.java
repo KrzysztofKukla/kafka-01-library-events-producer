@@ -41,7 +41,6 @@ class LibraryEventControllerTest {
             .content(objectMapper.writeValueAsString(libraryEvent))
             .contentType(MediaType.APPLICATION_JSON))
             .andExpect(MockMvcResultMatchers.status().isCreated());
-
     }
 
     @Test

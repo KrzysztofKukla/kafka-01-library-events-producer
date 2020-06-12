@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -52,11 +53,27 @@ public class LibraryEventController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/{topic}")
-    public LibraryEvent sendLibraryEventToTopic(@RequestBody LibraryEvent libraryEvent, @PathVariable String topic) throws JsonProcessingException {
+    public LibraryEvent sendLibraryEventToTopic(@RequestBody @Valid LibraryEvent libraryEvent, @PathVariable String topic) throws JsonProcessingException {
         log.info("Sending libraryEvent to {} topic", topic);
         libraryEventProducerService.sendLibraryEventWithTopic(libraryEvent, topic);
 
         return libraryEvent;
+    }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PutMapping("/{topic}/{id}")
+    public ResponseEntity<?> updateLibraryEvent(@RequestBody @Valid LibraryEvent libraryEvent,
+                                                @PathVariable String topic,
+                                                @PathVariable Long id) throws JsonProcessingException {
+        if (libraryEvent.getId() == null) {
+            log.warn("Cannot update Library event without libraryId");
+            return ResponseEntity.badRequest().body("Wrong libraryId");
+        }
+        log.info("Updating libraryEvent for id={}", libraryEvent.getId());
+
+        libraryEvent.setLibraryEventType(LibraryEventType.UPDATE);
+        libraryEventProducerService.sendLibraryEventWithTopic(libraryEvent, topic);
+        return ResponseEntity.noContent().build();
     }
 
 }
