@@ -9,6 +9,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -28,6 +29,7 @@ import pl.kukla.krzys.kafka01libraryeventsproducer.domain.LibraryEventType;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Krzysztof Kukla
@@ -62,6 +64,7 @@ public class LibraryEventControllerIT {
     }
 
     @Test
+    @Timeout(value = 5, unit = TimeUnit.SECONDS)
     void postLibraryEventWithTopicTest() throws Exception {
         String libraryEventsTopic = "library-events";
         //given

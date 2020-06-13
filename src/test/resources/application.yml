@@ -12,6 +12,16 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.LongSerializer
       #      publishing the message into Kafka payload ( actual boyd ) is String
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        # acks guarantees, the message is written to kafka successfully ( with confirmation form Kafka )
+        # acks = 1 ( default ) guarantees only message is written to leader
+        # all guarantees message is written to all replicas
+        # 0 ( not recommended ) - means we are not sure if message is written to Kafka
+        acks: all
+
+        # retries provides retry to send and write message if any failure ( by default is max value )
+        #retry.back.ms ( default is 100ms) - if there is no confirmation in 100ms then it attempts to retry send message again
+        retries: 10
     admin:
       properties:
         bootstrap.servers: "${spring.embedded.kafka.brokers}"
